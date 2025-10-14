@@ -255,5 +255,14 @@ if submit_button:
                 results_df = pd.DataFrame(predictions_dict)
                 st.dataframe(results_df)
 
-                del predictor
-                gc.collect()
+                # 主动释放内存
+                    del predictor
+                    gc.collect()
+
+                except Exception as e:
+                    st.error(f"Model loading failed: {str(e)}")
+
+            except Exception as e:
+                st.error(f"An error occurred: {str(e)}")
+               
+
