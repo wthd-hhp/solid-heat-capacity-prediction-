@@ -76,7 +76,6 @@ ESSENTIAL_MODELS = [
     "LightGBM_BAG_L1",
     "LightGBMLarge_BAG_L1",
     "MultiModalPredictor_BAG_L1",
-    "WeightedEnsemble_L2",
     "XGBoost_BAG_L1",
 ]
 
@@ -253,6 +252,7 @@ if submit_button:
                 st.error(f"Model loading failed: {str(e)}")
 
  
+
 
 
 
