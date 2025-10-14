@@ -73,7 +73,7 @@ required_descriptors = ["ATS0s", "ATS0pe", "ATSC0dv"]
 @st.cache_resource(show_spinner=False, max_entries=1)
 def load_predictor():
     """加载训练好的 AutoGluon 热容预测模型"""
-    return TabularPredictor.load("./autogluon")  # ← 改成你的模型路径
+    return TabularPredictor.load("./autogluon/ag-20250428_072334")  # ← 改成你的模型路径
 
 # ---------------- 分子绘图 ----------------
 def mol_to_image(mol, size=(300, 300)):
@@ -254,6 +254,7 @@ if submit_button:
             
 
                
+
 
 
 
