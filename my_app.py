@@ -256,13 +256,11 @@ if submit_button:
                 st.dataframe(results_df)
 
                 # 主动释放内存
-                    del predictor
-                    gc.collect()
-
-                except Exception as e:
-                    st.error(f"Model loading failed: {str(e)}")
+                del predictor
+                gc.collect()
 
             except Exception as e:
-                st.error(f"An error occurred: {str(e)}")
-               
+                st.error(f"Model loading failed: {str(e)}")
 
+        except Exception as e:
+            st.error(f"An error occurred: {str(e)}")
