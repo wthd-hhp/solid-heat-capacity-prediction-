@@ -162,25 +162,6 @@ def merge_features_without_duplicates(original_df, *feature_dfs):
     merged = merged.applymap(lambda x: float(np.mean(x)) if isinstance(x, (list, np.ndarray, tuple)) else float(x))
     return merged
 
-# ---------------- 主预测逻辑里构造输入 ----------------
-# 原来 3 行换成 1 行，保证每列都是 float
-# ---------- 计算描述符 ----------
-smiles_list = [smiles]
-rdkit_features = calc_rdkit_descriptors(smiles_list)
-mordred_features = calc_mordred_descriptors(smiles_list)
-
-# 1. 先合并（内部已把 list/ndarray 压成标量）
-merged_features = merge_features_without_duplicates(rdkit_features, mordred_features)
-
-# 2. 再切片
-# ---------- 预测 ----------
-data = merged_features.loc[:, required_descriptors]
-final_input = data.iloc[:1]
-
-# 🔧 压平
-final_input = final_input.applymap(
-    lambda x: float(np.mean(x)) if isinstance(x, (list, np.ndarray, tuple)) else float(x)
-)
 
 
 
@@ -263,6 +244,7 @@ if submit_button:
                 st.error(f"Model loading failed: {str(e)}")
 
  
+
 
 
 
