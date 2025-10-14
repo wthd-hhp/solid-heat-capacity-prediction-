@@ -257,4 +257,3 @@ if submit_button:
 
                 del predictor
                 gc.collect()
-                
