@@ -71,6 +71,15 @@ FEATURE_SETS = {
     "Solid": ["ATS0s", "ATS0pe", "ATSC0dv"],  # ← 按你的实际修改
 }
 
+ESSENTIAL_MODELS = [
+    "CatBoost_BAG_L1",
+    "LightGBM_BAG_L1",
+    "LightGBMLarge_BAG_L1",
+    "MultiModalPredictor_BAG_L1",
+    "WeightedEnsemble_L2",
+    "XGBoost_BAG_L1",
+]
+
 
 # ---------------- 选择物态 ----------------
 state = st.selectbox(
@@ -244,6 +253,7 @@ if submit_button:
                 st.error(f"Model loading failed: {str(e)}")
 
  
+
 
 
 
