@@ -10,7 +10,8 @@ import numpy as np
 import gc
 import re
 import traceback
-
+predictor = TabularPredictor.load("./autogluon/gas")
+print("Model expects features:", predictor.feature_metadata.get_features())
 # ---------------- 页面样式 ----------------
 st.markdown(
     """
@@ -158,8 +159,7 @@ def merge_features_without_duplicates(original_df, *feature_dfs):
     return merged
 
 
-predictor = TabularPredictor.load("./autogluon/gas")
-print("Model expects features:", predictor.feature_metadata.get_features())
+
 
 
 # ---------------- 主预测逻辑 ----------------
@@ -238,6 +238,7 @@ if submit_button:
                 st.error(f"Model loading failed: {str(e)}")
 
  
+
 
 
 
