@@ -208,7 +208,7 @@ if submit_button:
                 st.dataframe(input_df)
                 st.write("Available feature columns:")
                 st.write(list(merged_features.columns))
-                predictor = TabularPredictor.load("./models/gas/")
+                predictor = TabularPredictor.load("./autogluon/gas/")
                 print(predictor.feature_metadata.get_features())
 
 
@@ -242,6 +242,7 @@ if submit_button:
                 st.error(f"Model loading failed: {str(e)}")
 
  
+
 
 
 
