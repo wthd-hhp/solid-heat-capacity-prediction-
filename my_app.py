@@ -58,18 +58,22 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# ---------------- 模型路径与特征定义 ----------------
-MODEL_PATHS = {
-    "Gas": "./autogluon/gas/",
-    "Liquid": "./autogluon/liquid/",
-    "Solid": "./autogluon/solid/",
+# ---------------- 模型配置 ----------------
+MODEL_CONFIG = {
+    "Gas": {
+        "path": "./autogluon/gas",
+        "features": ["ATS0se", "EState_VSA5", "ATSC0dv"]
+    },
+    "Liquid": {
+        "path": "./autogluon/liquid",
+        "features": ["ATS0s", "PEOE_VSA6", "SssCH2"]
+    },
+    "Solid": {
+        "path": "./autogluon/solid",
+        "features": ["ATSC0dv", "ATS0s", "ATS0pe"]
+    }
 }
 
-FEATURE_SETS = {
-    "Gas": ["ATS0se", "EState_VSA5", "ATSC0dv"],
-    "Liquid": ["ATS0s", "PEOE_VSA6", "SssCH2"],
-    "Solid": ["ATS0pe", "ATSC0dv", "ATS0s"],  # ← 按你的实际修改
-}
 
 ESSENTIAL_MODELS = [
     "CatBoost_BAG_L1",
@@ -241,6 +245,7 @@ if submit_button:
                 st.error(f"Model loading failed: {str(e)}")
 
  
+
 
 
 
