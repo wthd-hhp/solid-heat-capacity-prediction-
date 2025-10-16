@@ -10,7 +10,7 @@ import numpy as np
 import gc
 import re
 import traceback
-
+import os
 # ---------------- 页面样式 ----------------
 st.markdown(
     """
@@ -66,7 +66,7 @@ MODEL_PATHS = {
 }
 
 FEATURE_SETS = {
-    "Gas": ["ATS0s", "PEOE_VSA6", "SssCH2"],
+    "Gas": ["ATS0se", "EState_VSA5", "ATSC0dv"],
     "Liquid": ["ATS0s", "PEOE_VSA6", "SssCH2"],
     "Solid": ["ATSC0dv", "ATS0s", "ATS0pe"],  # 替换为你的特征
 }
@@ -134,19 +134,12 @@ def calc_mordred_descriptors(smiles_list):
     for smi in smiles_list:
         mol = Chem.MolFromSmiles(smi)
         mol = Chem.AddHs(mol)
-        res = calc(mol)
-        desc_dict = {}
-        for key, val in res.asdict().items():
-            if isinstance(val, (list, tuple, np.ndarray, pd.Series)):
-                desc_dict[key] = val[0] if len(val) > 0 else np.nan
-            elif val is None or isinstance(val, complex):
-                desc_dict[key] = np.nan
-            elif hasattr(val, "__class__") and val.__class__.__name__ == "Missing":
-                desc_dict[key] = np.nan
-            else:
-                desc_dict[key] = val
-        results.append(desc_dict)
-    return pd.DataFrame(results)
+        try:
+            res = calc(mol)
+            results.append(res.asdict())
+        except Exception:
+            continue
+    return pd.DataFrame(results) if results else pd.DataFrame()
 
 
 # ---------------- 特征合并 ----------------
@@ -183,65 +176,48 @@ if submit_button:
                 mol_weight = Descriptors.MolWt(mol)
                 st.markdown(f"**Molecular Weight:** {mol_weight:.2f} g/mol")
 
-                # 计算描述符
-                smiles_list = [smiles]
-                rdkit_features = calc_rdkit_descriptors(smiles_list)
-                mordred_features = calc_mordred_descriptors(smiles_list)
+               # ---- 计算特征 ----
+                rdkit_features = calc_rdkit_descriptors([smiles])
+                mordred_features = calc_mordred_descriptors([smiles])
                 merged_features = merge_features_without_duplicates(rdkit_features, mordred_features)
-
+                if merged_features.empty:
+                    st.error("Feature generation failed. Check SMILES or Mordred setup.")
+                    st.stop()
                  #--- 获取当前模型与特征 ---
                 feature_names = FEATURE_SETS[state]
-                model_path = MODEL_PATHS[state]
-
-                # --- 自动补齐缺失列 ---
                 for f in feature_names:
                     if f not in merged_features.columns:
                         merged_features[f] = np.nan
 
-                # --- 创建输入 DataFrame（防止 scalar 报错）---
-                input_data = {"SMILES": [smiles]}
-                for f in feature_names:
-                    input_data[f] = [merged_features.iloc[0][f]]
-                input_df = pd.DataFrame(input_data)
+               predict_df = merged_features.loc[:, feature_names]
+                if predict_df.empty:
+                    st.error("Feature extraction failed.")
+                    st.stop()
 
-                st.write(f"Input Features for {state} model:")
-                st.dataframe(input_df)
-                st.write("Available feature columns:")
-                st.write(list(merged_features.columns))
-                predictor = TabularPredictor.load("./autogluon/gas/")
-                print(predictor.feature_metadata.get_features())
-
-
-                # --- 仅取特征列进行预测 ---
-                predict_df = pd.DataFrame({f: [merged_features.iloc[0][f]] for f in feature_names})
-
+                model_path = MODEL_PATHS[state]
                 predictor = load_predictor(model_path)
 
-               
-
-                 # --- 多模型预测 ---
+                # --- 多模型预测 ---
                 predictions_dict = {}
                 for model in ESSENTIAL_MODELS:
                     try:
                         pred = predictor.predict(predict_df, model=model)
                         predictions_dict[model] = pred.astype(float).apply(lambda x: f"{x:.2f} J/(mol·K)")
-                    except Exception as model_error:
-                        st.warning(f"Model {model} prediction failed: {str(model_error)}")
+                    except Exception as err:
+                        st.warning(f"{model} failed: {err}")
                         predictions_dict[model] = "Error"
 
-                # --- 展示结果 ---
-                st.write(f"Prediction Results ({state} Models):")
                 results_df = pd.DataFrame(predictions_dict)
+                st.write(f"**Prediction Results ({state}):**")
                 st.dataframe(results_df)
 
-                # 主动释放内存
                 del predictor
                 gc.collect()
 
             except Exception as e:
-                st.error(f"Model loading failed: {str(e)}")
-
+                st.error(f"Error: {str(e)}")
  
+
 
 
 
