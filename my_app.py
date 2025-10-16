@@ -10,8 +10,7 @@ import numpy as np
 import gc
 import re
 import traceback
-predictor = TabularPredictor.load("./autogluon/gas")
-print("Model expects features:", predictor.feature_metadata.get_features())
+
 # ---------------- 页面样式 ----------------
 st.markdown(
     """
@@ -238,6 +237,7 @@ if submit_button:
                 st.error(f"Model loading failed: {str(e)}")
 
  
+
 
 
 
