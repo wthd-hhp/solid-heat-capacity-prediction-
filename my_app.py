@@ -206,6 +206,11 @@ if submit_button:
 
                 st.write(f"Input Features for {state} model:")
                 st.dataframe(input_df)
+                st.write("Available feature columns:")
+                st.write(list(merged_features.columns))
+                predictor = TabularPredictor.load("./models/gas/")
+                print(predictor.feature_metadata.get_features())
+
 
                 # --- 仅取特征列进行预测 ---
                 predict_df = pd.DataFrame({f: [merged_features.iloc[0][f]] for f in feature_names})
@@ -237,6 +242,7 @@ if submit_button:
                 st.error(f"Model loading failed: {str(e)}")
 
  
+
 
 
 
