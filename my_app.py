@@ -48,9 +48,9 @@ st.markdown(
 st.markdown(
     """
     <div class='rounded-container'>
-        <h2>Predict Heat Capacity (Cp) of Gas Organic Molecules</h2>
+        <h2>Predict Heat Capacity (Cp) of Organic Molecules</h2>
         <blockquote>
-            1. This web app predicts the heat capacity (Cp) of gas organic molecules based on their SMILES structure using a trained machine learning model.<br>
+            1. This web app predicts the heat capacity (Cp) of organic molecules based on their SMILES structure using a trained machine learning model.<br>
             2. Enter a valid SMILES string below to get the predicted result.
         </blockquote>
     </div>
@@ -246,3 +246,4 @@ if submit_button:
 
 
                
+
