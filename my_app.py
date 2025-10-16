@@ -158,7 +158,8 @@ def merge_features_without_duplicates(original_df, *feature_dfs):
     return merged
 
 
-
+predictor = TabularPredictor.load("./autogluon/gas")
+print("Model expects features:", predictor.feature_metadata.get_features())
 
 
 # ---------------- 主预测逻辑 ----------------
@@ -237,6 +238,7 @@ if submit_button:
                 st.error(f"Model loading failed: {str(e)}")
 
  
+
 
 
 
