@@ -68,7 +68,7 @@ MODEL_PATHS = {
 FEATURE_SETS = {
     "Gas": ["ATS0se", "EState_VSA5", "ATSC0dv"],
     "Liquid": ["ATS0s", "PEOE_VSA6", "SssCH2"],
-    "Solid": ["ATS0s", "ATS0pe", "ATSC0dv"],  # ← 按你的实际修改
+    "Solid": ["ATS0pe", "ATSC0dv", "ATS0s"],  # ← 按你的实际修改
 }
 
 ESSENTIAL_MODELS = [
@@ -252,6 +252,7 @@ if submit_button:
                 st.error(f"Model loading failed: {str(e)}")
 
  
+
 
 
 
