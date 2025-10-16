@@ -10,7 +10,7 @@ import numpy as np
 import gc
 import re
 import traceback
-import os
+
 # ---------------- 页面样式 ----------------
 st.markdown(
     """
@@ -48,9 +48,9 @@ st.markdown(
 st.markdown(
     """
     <div class='rounded-container'>
-        <h2>Predict Heat Capacity (Cp) of Organic Molecules</h2>
+        <h2>Predict Heat Capacity (Cp) of Gas Organic Molecules</h2>
         <blockquote>
-            1. This web app predicts the heat capacity (Cp) of organic molecules based on their SMILES structure using trained machine learning models.<br>
+            1. This web app predicts the heat capacity (Cp) of gas organic molecules based on their SMILES structure using a trained machine learning model.<br>
             2. Enter a valid SMILES string below to get the predicted result.
         </blockquote>
     </div>
@@ -95,14 +95,13 @@ smiles = st.text_input(
 
 submit_button = st.button("Submit and Predict")
 
-
-
-
 # ---------------- 模型加载 ----------------
 @st.cache_resource(show_spinner=False)
 def load_predictor(model_path):
     """根据物态加载 AutoGluon 模型"""
     return TabularPredictor.load(model_path)
+
+
 
 # ---------------- 分子绘图 ----------------
 def mol_to_image(mol, size=(300, 300)):
@@ -113,7 +112,18 @@ def mol_to_image(mol, size=(300, 300)):
     svg = re.sub(r"<rect[^>]*>", "", svg, flags=re.DOTALL)
     return svg
 
-
+# ---------------- 清洗描述符函数 ----------------
+def clean_descriptor_dataframe(df):
+    """确保所有描述符为单值浮点数"""
+    cleaned = df.copy()
+    for col in cleaned.columns:
+        cleaned[col] = cleaned[col].apply(
+            lambda x: x[0]
+            if isinstance(x, (list, tuple, np.ndarray, pd.Series)) and len(x) > 0
+            else x
+        )
+    cleaned = cleaned.apply(pd.to_numeric, errors="coerce")
+    return cleaned
 
 # ---------------- RDKit 描述符 ----------------
 def calc_rdkit_descriptors(smiles_list):
@@ -134,14 +144,21 @@ def calc_mordred_descriptors(smiles_list):
     for smi in smiles_list:
         mol = Chem.MolFromSmiles(smi)
         mol = Chem.AddHs(mol)
-        try:
-            res = calc(mol)
-            results.append(res.asdict())
-        except Exception:
-            continue
-    return pd.DataFrame(results) if results else pd.DataFrame()
+        res = calc(mol)
+        desc_dict = {}
+        for key, val in res.asdict().items():
+            if isinstance(val, (list, tuple, np.ndarray, pd.Series)):
+                desc_dict[key] = val[0] if len(val) > 0 else np.nan
+            elif val is None or isinstance(val, complex):
+                desc_dict[key] = np.nan
+            elif hasattr(val, "__class__") and val.__class__.__name__ == "Missing":
+                desc_dict[key] = np.nan
+            else:
+                desc_dict[key] = val
+        results.append(desc_dict)
+    return pd.DataFrame(results)
 
-
+# ---------------- 特征合并 ----------------
 # ---------------- 特征合并 ----------------
 def merge_features_without_duplicates(original_df, *feature_dfs):
     merged = pd.concat([original_df] + list(feature_dfs), axis=1)
@@ -149,8 +166,6 @@ def merge_features_without_duplicates(original_df, *feature_dfs):
     # 新增：把 list/ndarray 压成标量
     merged = merged.applymap(lambda x: float(np.mean(x)) if isinstance(x, (list, np.ndarray, tuple)) else float(x))
     return merged
-
-
 
 
 
@@ -176,24 +191,33 @@ if submit_button:
                 mol_weight = Descriptors.MolWt(mol)
                 st.markdown(f"**Molecular Weight:** {mol_weight:.2f} g/mol")
 
-               # ---- 计算特征 ----
-                rdkit_features = calc_rdkit_descriptors([smiles])
-                mordred_features = calc_mordred_descriptors([smiles])
+                # 计算描述符
+                smiles_list = [smiles]
+                rdkit_features = calc_rdkit_descriptors(smiles_list)
+                mordred_features = calc_mordred_descriptors(smiles_list)
                 merged_features = merge_features_without_duplicates(rdkit_features, mordred_features)
-                if merged_features.empty:
-                    st.error("Feature generation failed. Check SMILES or Mordred setup.")
-                    st.stop()
-                 #--- 获取当前模型与特征 ---
+
+               
+                # 获取该状态下的特征
                 feature_names = FEATURE_SETS[state]
-                for f in feature_names:
-                    if f not in merged_features.columns:
-                        merged_features[f] = np.nan
-
-                predict_df = merged_features.loc[:, feature_names]
-                if predict_df.empty:
-                    st.error("Feature extraction failed.")
+                missing_features = [f for f in feature_names if f not in merged_features.columns]
+                if missing_features:
+                    st.error(f"Missing features for {state} model: {missing_features}")
                     st.stop()
 
+                # --- 创建输入数据表（含 SMILES）---
+                input_data = {"SMILES": [smiles]}
+                for f in feature_names:
+                    input_data[f] = [merged_features.iloc[0][f]]
+                input_df = pd.DataFrame(input_data)
+
+                st.write(f"Input Features for {state} model:")
+                st.dataframe(input_df)
+
+                # --- 仅取特征列进行预测 ---
+                predict_df = merged_features.loc[:, feature_names]
+
+                # 加载模型
                 model_path = MODEL_PATHS[state]
                 predictor = load_predictor(model_path)
 
@@ -203,46 +227,22 @@ if submit_button:
                     try:
                         pred = predictor.predict(predict_df, model=model)
                         predictions_dict[model] = pred.astype(float).apply(lambda x: f"{x:.2f} J/(mol·K)")
-                    except Exception as err:
-                        st.warning(f"{model} failed: {err}")
+                    except Exception as model_error:
+                        st.warning(f"Model {model} prediction failed: {str(model_error)}")
                         predictions_dict[model] = "Error"
 
+                # --- 展示结果 ---
+                st.write(f"Prediction Results ({state} Models):")
                 results_df = pd.DataFrame(predictions_dict)
-                st.write(f"**Prediction Results ({state}):**")
                 st.dataframe(results_df)
 
+                # 主动释放内存
                 del predictor
                 gc.collect()
 
             except Exception as e:
-                st.error(f"Error: {str(e)}")
- 
+                st.error(f"An error occurred: {str(e)}")
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+               
