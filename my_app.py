@@ -228,6 +228,8 @@ if submit_button:
                 # 加载对应模型并预测
                 model_path = MODEL_PATHS[state]
                 predictor = load_predictor(model_path)
+                predictor = TabularPredictor.load("./autogluon/gas")
+                print("Model expects features:", predictor.feature_metadata.get_features())
 
                  # --- 多模型预测 ---
                 predictions_dict = {}
@@ -252,6 +254,7 @@ if submit_button:
                 st.error(f"Model loading failed: {str(e)}")
 
  
+
 
 
 
