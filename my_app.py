@@ -66,7 +66,7 @@ MODEL_PATHS = {
 }
 
 FEATURE_SETS = {
-    "Gas": ["ATS0se", "EState_VSA5", "ATSC0dv"],
+    "Gas": ["ATS0s", "PEOE_VSA6", "SssCH2"],
     "Liquid": ["ATS0s", "PEOE_VSA6", "SssCH2"],
     "Solid": ["ATSC0dv", "ATS0s", "ATS0pe"],  # 替换为你的特征
 }
@@ -237,6 +237,7 @@ if submit_button:
                 st.error(f"Model loading failed: {str(e)}")
 
  
+
 
 
 
