@@ -189,14 +189,16 @@ if submit_button:
                 mordred_features = calc_mordred_descriptors(smiles_list)
                 merged_features = merge_features_without_duplicates(rdkit_features, mordred_features)
 
-                # 获取该状态下的特征
+                 #--- 获取当前模型与特征 ---
                 feature_names = FEATURE_SETS[state]
-                missing_features = [f for f in feature_names if f not in merged_features.columns]
-                if missing_features:
-                    st.error(f"Missing features for {state} model: {missing_features}")
-                    st.stop()
+                model_path = MODEL_PATHS[state]
 
-                # --- 创建输入数据表（含 SMILES）---
+                # --- 自动补齐缺失列 ---
+                for f in feature_names:
+                    if f not in merged_features.columns:
+                        merged_features[f] = np.nan
+
+                # --- 创建输入 DataFrame（防止 scalar 报错）---
                 input_data = {"SMILES": [smiles]}
                 for f in feature_names:
                     input_data[f] = [merged_features.iloc[0][f]]
@@ -206,12 +208,11 @@ if submit_button:
                 st.dataframe(input_df)
 
                 # --- 仅取特征列进行预测 ---
-                predict_df = merged_features.loc[:, feature_names]
+                predict_df = pd.DataFrame({f: [merged_features.iloc[0][f]] for f in feature_names})
 
-                # 加载模型
-                model_path = MODEL_PATHS[state]
                 predictor = load_predictor(model_path)
-                
+
+               
 
                  # --- 多模型预测 ---
                 predictions_dict = {}
@@ -236,6 +237,7 @@ if submit_button:
                 st.error(f"Model loading failed: {str(e)}")
 
  
+
 
 
 
