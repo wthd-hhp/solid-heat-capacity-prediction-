@@ -97,9 +97,6 @@ submit_button = st.button("Submit and Predict")
 
 
 
-# 模型特征（与你的 AutoGluon 模型保持一致）
-#required_descriptors = ["ATS0s", "ATS0pe", "ATSC0dv"]
-
 # ---------------- 模型加载 ----------------
 @st.cache_resource(show_spinner=False)
 def load_predictor(model_path):
@@ -115,18 +112,7 @@ def mol_to_image(mol, size=(300, 300)):
     svg = re.sub(r"<rect[^>]*>", "", svg, flags=re.DOTALL)
     return svg
 
-# ---------------- 清洗描述符函数 ----------------
-def clean_descriptor_dataframe(df):
-    """确保所有描述符为单值浮点数"""
-    cleaned = df.copy()
-    for col in cleaned.columns:
-        cleaned[col] = cleaned[col].apply(
-            lambda x: x[0]
-            if isinstance(x, (list, tuple, np.ndarray, pd.Series)) and len(x) > 0
-            else x
-        )
-    cleaned = cleaned.apply(pd.to_numeric, errors="coerce")
-    return cleaned
+
 
 # ---------------- RDKit 描述符 ----------------
 def calc_rdkit_descriptors(smiles_list):
@@ -161,7 +147,7 @@ def calc_mordred_descriptors(smiles_list):
         results.append(desc_dict)
     return pd.DataFrame(results)
 
-# ---------------- 特征合并 ----------------
+
 # ---------------- 特征合并 ----------------
 def merge_features_without_duplicates(original_df, *feature_dfs):
     merged = pd.concat([original_df] + list(feature_dfs), axis=1)
@@ -202,12 +188,14 @@ if submit_button:
                 mordred_features = calc_mordred_descriptors(smiles_list)
                 merged_features = merge_features_without_duplicates(rdkit_features, mordred_features)
 
-                # 根据物态选择不同特征
-                feature_names = FEATURE_SETS[state]
-                missing_features = [f for f in feature_names if f not in merged_features.columns]
-
-                if missing_features:
-                    st.error(f"Missing features for {state} model: {missing_features}")
+                # 获取当前状态的模型与特征
+                config = MODEL_CONFIG[state]
+                required_features = config["features"]
+                model_path = config["path"]
+               # 自动检测缺失列
+                missing_cols = [f for f in required_features if f not in merged_features.columns]
+                if missing_cols:
+                    st.error(f"Missing descriptors: {missing_cols}")
                     st.stop()
 
                  # --- 创建输入数据表（含 SMILES）---
@@ -228,8 +216,7 @@ if submit_button:
                 # 加载对应模型并预测
                 model_path = MODEL_PATHS[state]
                 predictor = load_predictor(model_path)
-                predictor = TabularPredictor.load("./autogluon/gas")
-                print("Model expects features:", predictor.feature_metadata.get_features())
+                
 
                  # --- 多模型预测 ---
                 predictions_dict = {}
@@ -254,6 +241,7 @@ if submit_button:
                 st.error(f"Model loading failed: {str(e)}")
 
  
+
 
 
 
