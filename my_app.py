@@ -58,20 +58,17 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# ---------------- 模型配置 ----------------
-MODEL_CONFIG = {
-    "Gas": {
-        "path": "./autogluon/gas",
-        "features": ["ATS0se", "EState_VSA5", "ATSC0dv"]
-    },
-    "Liquid": {
-        "path": "./autogluon/liquid",
-        "features": ["ATS0s", "PEOE_VSA6", "SssCH2"]
-    },
-    "Solid": {
-        "path": "./autogluon/solid",
-        "features": ["ATSC0dv", "ATS0s", "ATS0pe"]
-    }
+# ---------------- 模型路径与特征定义 ----------------
+MODEL_PATHS = {
+    "Gas": "./autogluon/gas/",
+    "Liquid": "./autogluon/liquid/",
+    "Solid": "./autogluon/solid/",
+}
+
+FEATURE_SETS = {
+    "Gas": ["ATS0se", "EState_VSA5", "ATSC0dv"],
+    "Liquid": ["ATS0s", "PEOE_VSA6", "SssCH2"],
+    "Solid": ["ATSC0dv", "ATS0s", "ATS0pe"],  # 替换为你的特征
 }
 
 
@@ -192,32 +189,26 @@ if submit_button:
                 mordred_features = calc_mordred_descriptors(smiles_list)
                 merged_features = merge_features_without_duplicates(rdkit_features, mordred_features)
 
-                # 获取当前状态的模型与特征
-                config = MODEL_CONFIG[state]
-                required_features = config["features"]
-                model_path = config["path"]
-               # 自动检测缺失列
-                missing_cols = [f for f in required_features if f not in merged_features.columns]
-                if missing_cols:
-                    st.error(f"Missing descriptors: {missing_cols}")
+                # 获取该状态下的特征
+                feature_names = FEATURE_SETS[state]
+                missing_features = [f for f in feature_names if f not in merged_features.columns]
+                if missing_features:
+                    st.error(f"Missing features for {state} model: {missing_features}")
                     st.stop()
 
-                 # --- 创建输入数据表（含 SMILES）---
+                # --- 创建输入数据表（含 SMILES）---
                 input_data = {"SMILES": [smiles]}
                 for f in feature_names:
                     input_data[f] = [merged_features.iloc[0][f]]
                 input_df = pd.DataFrame(input_data)
-                
-                
 
-                # 显示输入特征表
                 st.write(f"Input Features for {state} model:")
                 st.dataframe(input_df)
 
                 # --- 仅取特征列进行预测 ---
                 predict_df = merged_features.loc[:, feature_names]
 
-                # 加载对应模型并预测
+                # 加载模型
                 model_path = MODEL_PATHS[state]
                 predictor = load_predictor(model_path)
                 
@@ -245,6 +236,7 @@ if submit_button:
                 st.error(f"Model loading failed: {str(e)}")
 
  
+
 
 
 
