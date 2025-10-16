@@ -189,7 +189,7 @@ if submit_button:
                     if f not in merged_features.columns:
                         merged_features[f] = np.nan
 
-               predict_df = merged_features.loc[:, feature_names]
+                predict_df = merged_features.loc[:, feature_names]
                 if predict_df.empty:
                     st.error("Feature extraction failed.")
                     st.stop()
@@ -217,6 +217,7 @@ if submit_button:
             except Exception as e:
                 st.error(f"Error: {str(e)}")
  
+
 
 
 
