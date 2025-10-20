@@ -48,7 +48,7 @@ st.markdown(
 st.markdown(
     """
     <div class='rounded-container'>
-        <h2>Predict Heat Capacity (Cp) of Organic Molecules</h2>
+        <h2 style="font-size:24px;">Predict Heat Capacity (Cp) of Organic Molecules</h2>
         <blockquote>
             1. This web app predicts the heat capacity (Cp) of organic molecules based on their SMILES structure using a trained machine learning model.<br>
             2. Enter a valid SMILES string below to get the predicted result.
@@ -104,7 +104,7 @@ def load_predictor(model_path):
 
 
 # ---------------- 分子绘图 ----------------
-def mol_to_image(mol, size=(300, 300)):
+def mol_to_image(mol, size=(200, 200)):
     d2d = MolDraw2DSVG(size[0], size[1])
     d2d.DrawMolecule(mol)
     d2d.FinishDrawing()
@@ -246,4 +246,5 @@ if submit_button:
 
 
                
+
 
