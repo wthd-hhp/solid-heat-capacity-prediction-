@@ -74,9 +74,7 @@ FEATURE_SETS = {
 
 ESSENTIAL_MODELS = [
     "CatBoost_BAG_L1",
-    "LightGBM_BAG_L1",
     "LightGBMLarge_BAG_L1",
-    "MultiModalPredictor_BAG_L1",
     "XGBoost_BAG_L1",
 ]
 
@@ -246,5 +244,6 @@ if submit_button:
 
 
                
+
 
 
