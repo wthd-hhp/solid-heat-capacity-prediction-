@@ -208,9 +208,7 @@ if submit_button:
                     input_data[f] = [merged_features.iloc[0][f]]
                 input_df = pd.DataFrame(input_data)
 
-                st.write(f"Input Features for {state} model:")
-                st.dataframe(input_df)
-
+               
                 # --- 仅取特征列进行预测 ---
                 predict_df = merged_features.loc[:, feature_names]
 
@@ -257,6 +255,7 @@ if submit_button:
 
 
                
+
 
 
 
