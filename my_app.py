@@ -15,6 +15,14 @@ import traceback
 st.markdown(
     """
     <style>
+    /* -------- 去掉页面右侧滚动条 -------- */
+    ::-webkit-scrollbar {
+        width: 0px;  /* 隐藏滚动条 */
+        background: transparent;  /* 可选：去掉背景 */
+    }
+    html, body {
+        overflow: hidden;  /* 禁止整体滚动 */
+    }
     .stApp {
         border: 2px solid #808080;
         border-radius: 20px;
@@ -255,6 +263,7 @@ if submit_button:
 
 
                
+
 
 
 
